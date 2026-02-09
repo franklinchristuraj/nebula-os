@@ -413,7 +413,7 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 ## Contact
 
-**Franklin** - Human-AI Interaction Architect  
+**Franklin** 
 Building tools that make AI agents truly helpful.
 
 ---
