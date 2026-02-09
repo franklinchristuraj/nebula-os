@@ -1,0 +1,11 @@
+# NebulaOS Weaviate Collections Requirements
+# Python 3.9+
+
+# Weaviate client (v4+)
+weaviate-client>=4.0.0
+
+# Google Generative AI for embeddings
+google-generativeai>=0.3.0
+
+# Optional: For development and testing
+python-dotenv>=1.0.0
