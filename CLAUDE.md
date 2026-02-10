@@ -1,0 +1,81 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+NebulaOS is a semantic memory system and knowledge graph for AI agents. It provides persistent, context-aware knowledge using Weaviate (vector database) with Google text-embedding-004 embeddings (768 dimensions). Self-hosted, privacy-first architecture.
+
+**Current status**: Phase 1 (Foundation/Schema) complete. Phase 2 (Data Ingestion via Make.com pipelines) in progress.
+
+## Commands
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Environment setup
+cp .env.example .env  # then fill in WEAVIATE_API_KEY, GOOGLE_API_KEY, etc.
+
+# Start Weaviate (Docker)
+docker run -d --name weaviate-secure -p 8081:8080 -p 50051:50051 \
+  -e AUTHENTICATION_APIKEY_ENABLED=true \
+  -e AUTHENTICATION_APIKEY_ALLOWED_KEYS=$WEAVIATE_API_KEY \
+  -e AUTHENTICATION_APIKEY_USERS=admin \
+  -v weaviate_data:/var/lib/weaviate \
+  cr.weaviate.io/semitechnologies/weaviate:1.34.4
+
+# Create schema (run once after Weaviate is up)
+python weaviate/create_schema.py
+
+# Run validation tests
+python weaviate/test_schema.py
+
+# Test embedding setup
+python scripts/embedding_helpers.py
+```
+
+No linter or formatter is configured.
+
+## Architecture
+
+### Data Flow
+
+```
+Data Sources → Make.com Pipeline (embedding generation) → Weaviate DB (Docker) → AI Agents (semantic search)
+```
+
+Vectors are generated externally (not by Weaviate). This manual vectorization approach allows swapping embedding models without schema changes.
+
+### Five Collections (Knowledge Graph)
+
+| Collection | Purpose | References |
+|------------|---------|------------|
+| **Entity** | Foundation layer — concrete nouns (companies, people, projects) | None (referenced by all others) |
+| **Strategy** | Goals, frameworks, principles | → Entity, → Strategy (self-ref) |
+| **Insight** | Atomic knowledge units — learnings, observations | → Entity, → Strategy, → Insight (self-ref) |
+| **Event** | Timeline — meetings, decisions, milestones | → Entity, → Strategy, → Insight |
+| **Process** | Operational — procedures, workflows | → Entity, → Strategy |
+
+Entity is the grounding layer; all other collections reference it. Cross-references enable graph traversal queries alongside vector similarity search.
+
+### Key Patterns
+
+- **Domain separation**: Every object tagged `personal`, `work`, or `both` for privacy-aware filtering
+- **Superseding pattern**: Objects use `status` (active/superseded/archived) + `superseded_by` UUID instead of versioning — keeps search clean while preserving audit trail
+- **Task-specific embeddings**: `retrieval_document` for storage, `retrieval_query` for search (Google Embedding 004 feature)
+- **Hybrid search**: Combines vector similarity (cosine/HNSW) with property filters in single queries
+
+### Weaviate Connection
+
+Connects to local Docker instance: HTTP on port 8081, gRPC on port 50051, authenticated via API key. Connection helper pattern is in `scripts/quick_reference.py`.
+
+## Code Layout
+
+- `weaviate/create_schema.py` — Schema creation for all 5 collections (run once)
+- `weaviate/test_schema.py` — Comprehensive validation: CRUD, vector search, cross-references, filtering
+- `scripts/embedding_helpers.py` — Google Embedding 004 integration with per-collection text preparation
+- `scripts/quick_reference.py` — Common Weaviate operations (CRUD, search, stats)
+- `scripts/example_usage.py` — End-to-end usage examples (create, search, filter, multi-collection queries)
+- `pipelines/` — Placeholder for Make.com pipeline configs (Phase 2)
+- `docs/` — Numbered documentation: vision → architecture → research → implementation → changelog
