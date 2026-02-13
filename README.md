@@ -47,7 +47,7 @@ Current AI assistants are:
 
 NebulaOS provides:
 - **Persistent Memory**: Structured knowledge that survives across conversations
-- **Semantic Search**: Find knowledge by meaning using 768-dimensional vector embeddings (Google Embedding 004)
+- **Semantic Search**: Find knowledge by meaning using 384-dimensional vector embeddings (text2vec-transformers)
 - **Knowledge Graph**: Five core collections with cross-references for rich context
 - **Privacy-First**: Self-hosted on your infrastructure, you control the data
 
@@ -61,7 +61,7 @@ NebulaOS provides:
 | **Weaviate Implementation** | ✅ Complete | All collections created and validated |
 | **Test Suite** | ✅ Passing | CRUD, vector search, cross-references, filters |
 | **Documentation** | ✅ Complete | Vision, architecture, research, implementation |
-| **Embedding Pipeline** | 🔄 In Progress | Make.com pipeline for Google Embedding 004 |
+| **Embedding Pipeline** | ✅ Complete | Local Text2Vec Transformers - auto vectorization |
 | **Data Migration** | 📋 Planned | Migrate existing notes and insights |
 | **Agent Integration** | 📋 Planned | Query API for Claude/GPT |
 
@@ -82,7 +82,7 @@ NebulaOS provides:
          │
          ▼
 ┌──────────────────┐
-│  Make.com        │  • Generate 768-dim vectors (Google Embedding 004)
+│  Make.com        │
 │  Pipeline        │  • Format for Weaviate schema
 └────────┬─────────┘  • HTTP POST to Weaviate
          │
@@ -102,7 +102,7 @@ NebulaOS provides:
 ### Technology Stack
 
 - **Vector Database**: [Weaviate](https://weaviate.io/) (self-hosted, Docker)
-- **Embeddings**: Google text-embedding-004 (768 dimensions)
+- **Embeddings**: text2vec-transformers - local (384 dimensions)
 - **Indexing**: HNSW (Hierarchical Navigable Small World)
 - **Distance Metric**: Cosine similarity
 - **Client**: Python 3.9+ with `weaviate-client>=4.0.0`
@@ -184,7 +184,7 @@ Use Case: "How do I prepare for client workshops?"
 
 - Docker (for Weaviate)
 - Python 3.9+
-- Google AI API key (for embeddings)
+- text2vec-transformers - vectorization (for embeddings)
 
 ### 1. Clone Repository
 
@@ -205,7 +205,6 @@ pip install -r requirements.txt
 cp .env.example .env
 # Edit .env with your API keys:
 # - WEAVIATE_API_KEY
-# - GOOGLE_API_KEY
 ```
 
 ### 4. Start Weaviate (Docker)
@@ -344,7 +343,7 @@ NebulaOS is the system I wish existed: **a memory layer that makes AI agents tru
 1. **Privacy First**: Self-hosted, you control your data
 2. **Open Design**: Architecture and schema documented publicly
 3. **AI-Native**: Designed for semantic search and agent consumption, not just human browsing
-4. **Pragmatic**: Built with production-ready tools (Weaviate, Google Embeddings), not experimental tech
+4. **Pragmatic**: Built with production-ready tools (Weaviate, text2vec-transformers Embeddings), not experimental tech
 5. **Evolvable**: Schema supports versioning, superseding, and knowledge evolution
 
 ---
