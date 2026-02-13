@@ -7,7 +7,7 @@ Date: 2025-02-13
 """
 
 import weaviate
-from weaviate.classes.config import Configure, Property, DataType, ReferenceProperty
+from weaviate.classes.config import Configure, Property, DataType, ReferenceProperty, VectorDistances
 from datetime import datetime, timezone
 import sys
 import traceback
@@ -28,7 +28,7 @@ def create_entity_collection(client):
         ),
 
         vector_index_config=Configure.VectorIndex.hnsw(
-            distance_metric="cosine"
+            distance_metric=VectorDistances.COSINE
         ),
         
         properties=[
@@ -115,7 +115,7 @@ def create_strategy_collection(client):
         ),
 
         vector_index_config=Configure.VectorIndex.hnsw(
-            distance_metric="cosine"
+            distance_metric=VectorDistances.COSINE
         ),
         
         properties=[
@@ -233,7 +233,7 @@ def create_insight_collection(client):
         ),
 
         vector_index_config=Configure.VectorIndex.hnsw(
-            distance_metric="cosine"
+            distance_metric=VectorDistances.COSINE
         ),
         
         properties=[
@@ -350,7 +350,7 @@ def create_event_collection(client):
         ),
 
         vector_index_config=Configure.VectorIndex.hnsw(
-            distance_metric="cosine"
+            distance_metric=VectorDistances.COSINE
         ),
         
         properties=[
@@ -472,7 +472,7 @@ def create_process_collection(client):
         ),
 
         vector_index_config=Configure.VectorIndex.hnsw(
-            distance_metric="cosine"
+            distance_metric=VectorDistances.COSINE
         ),
         
         properties=[
