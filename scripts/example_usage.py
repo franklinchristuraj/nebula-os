@@ -1,6 +1,15 @@
 """
 NebulaOS Example Usage
 Demonstrates how to insert and query data with manual vectors
+
+⚠️ DEPRECATED: This file demonstrates manual vectorization approach.
+With the current text2vec-transformers setup, vectors are auto-generated.
+
+For updated examples using auto-vectorization, see:
+- weaviate/example_auto_vectorization.py
+- weaviate/README_VECTORIZER.md
+
+This file is kept for reference purposes only.
 """
 
 import weaviate

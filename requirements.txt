@@ -4,8 +4,9 @@
 # Weaviate client (v4+)
 weaviate-client>=4.0.0
 
-# Google Generative AI for embeddings
-google-generativeai>=0.3.0
-
-# Optional: For development and testing
+# For development and testing
 python-dotenv>=1.0.0
+
+# Optional: Google Generative AI (only if using manual embeddings)
+# Not required with text2vec-transformers auto-vectorization
+# google-generativeai>=0.3.0

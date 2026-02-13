@@ -3,7 +3,7 @@
 NebulaOS Schema Creation Script with text2vec-transformers
 Creates all 5 collections in Weaviate with automatic vectorization
 Version: 2.0 (with local transformers vectorizer)
-Date: 2025-02-13
+Date: 2025-02-10
 """
 
 import weaviate
@@ -16,17 +16,17 @@ import os
 
 def create_entity_collection(client):
     """Create Entity collection with text2vec-transformers auto-vectorization"""
-
+    
     client.collections.create(
         name="Entity",
         description="Organizations, teams, products, projects, and people that appear in knowledge base",
-
+        
         # Configure text2vec-transformers vectorizer
         vectorizer_config=Configure.Vectorizer.text2vec_transformers(
             pooling_strategy="masked_mean",  # Options: masked_mean, cls
             vectorize_collection_name=False
         ),
-
+        
         vector_index_config=Configure.VectorIndex.hnsw(
             distance_metric="cosine"
         ),
@@ -104,16 +104,16 @@ def create_entity_collection(client):
 
 def create_strategy_collection(client):
     """Create Strategy collection with auto-vectorization"""
-
+    
     client.collections.create(
         name="Strategy",
         description="Goals, priorities, frameworks, principles, mental models - decision-making knowledge",
-
+        
         vectorizer_config=Configure.Vectorizer.text2vec_transformers(
             pooling_strategy="masked_mean",
             vectorize_collection_name=False
         ),
-
+        
         vector_index_config=Configure.VectorIndex.hnsw(
             distance_metric="cosine"
         ),
@@ -203,7 +203,7 @@ def create_strategy_collection(client):
                 skip_vectorization=True
             )
         ],
-
+        
         references=[
             ReferenceProperty(
                 name="appliesToEntities",
@@ -222,16 +222,16 @@ def create_strategy_collection(client):
 
 def create_insight_collection(client):
     """Create Insight collection with auto-vectorization"""
-
+    
     client.collections.create(
         name="Insight",
         description="Atomic knowledge units - learnings, observations, ideas, patterns, mental models",
-
+        
         vectorizer_config=Configure.Vectorizer.text2vec_transformers(
             pooling_strategy="masked_mean",
             vectorize_collection_name=False
         ),
-
+        
         vector_index_config=Configure.VectorIndex.hnsw(
             distance_metric="cosine"
         ),
@@ -315,7 +315,7 @@ def create_insight_collection(client):
                 skip_vectorization=True
             )
         ],
-
+        
         references=[
             ReferenceProperty(
                 name="relatedStrategies",
@@ -339,16 +339,16 @@ def create_insight_collection(client):
 
 def create_event_collection(client):
     """Create Event collection with auto-vectorization"""
-
+    
     client.collections.create(
         name="Event",
         description="Point-in-time occurrences - meetings, decisions, milestones, announcements",
-
+        
         vectorizer_config=Configure.Vectorizer.text2vec_transformers(
             pooling_strategy="masked_mean",
             vectorize_collection_name=False
         ),
-
+        
         vector_index_config=Configure.VectorIndex.hnsw(
             distance_metric="cosine"
         ),
@@ -437,7 +437,7 @@ def create_event_collection(client):
                 skip_vectorization=True
             )
         ],
-
+        
         references=[
             ReferenceProperty(
                 name="involvesEntities",
@@ -461,16 +461,16 @@ def create_event_collection(client):
 
 def create_process_collection(client):
     """Create Process collection with auto-vectorization"""
-
+    
     client.collections.create(
         name="Process",
         description="Procedures, workflows, how-tos - operational knowledge for recurring activities",
-
+        
         vectorizer_config=Configure.Vectorizer.text2vec_transformers(
             pooling_strategy="masked_mean",
             vectorize_collection_name=False
         ),
-
+        
         vector_index_config=Configure.VectorIndex.hnsw(
             distance_metric="cosine"
         ),
@@ -539,7 +539,7 @@ def create_process_collection(client):
                 skip_vectorization=True
             )
         ],
-
+        
         references=[
             ReferenceProperty(
                 name="appliesToEntities",
@@ -556,62 +556,44 @@ def create_process_collection(client):
     print("✅ Created Process collection with auto-vectorization")
 
 
-def add_insight_strategy_reference(client):
-    """Add the informedByInsights reference to Strategy collection after Insight exists"""
-    
-    try:
-        # Get Strategy collection
-        strategy_collection = client.collections.get("Strategy")
-        
-        # Note: In Weaviate v4 client, we need to update the collection config
-        # This requires recreating with all references, which was done in create_strategy_collection
-        # The reference is added via client.collections.config.add_reference()
-        
-        # For now, log that the mutual references are handled by creation order
-        print("   Note: Strategy->Insight reference handled via creation order")
-        
-    except Exception as e:
-        print(f"   Warning: Could not update Strategy references: {e}")
-
-
 def validate_schema(client):
     """Validate all collections were created correctly"""
-
+    
     print("\n📋 Schema Validation:")
-
+    
     collections = ["Entity", "Insight", "Strategy", "Event", "Process"]
     all_valid = True
-
+    
     for collection_name in collections:
         try:
             collection = client.collections.get(collection_name)
             config = collection.config.get()
-
+            
             # Count properties
             prop_count = len(config.properties)
-
+            
             # Count references (if they exist)
             ref_count = len(config.references) if hasattr(config, 'references') and config.references else 0
-
+            
             # Check vectorizer
             vectorizer = "none"
             if hasattr(config, 'vectorizer_config') and config.vectorizer_config:
                 vectorizer = getattr(config.vectorizer_config, 'vectorizer', 'unknown')
-
+            
             print(f"  ✅ {collection_name}: {prop_count} properties, {ref_count} references, vectorizer: {vectorizer}")
-
+            
         except Exception as e:
             print(f"  ❌ {collection_name}: {str(e)}")
             all_valid = False
-
+    
     return all_valid
 
 
 def run_validation_tests(client):
     """Run comprehensive validation tests with auto-vectorization"""
-
+    
     print("\n🧪 Running Validation Tests\n")
-
+    
     # Test 1: Check all collections exist
     print("Test 1: Collection Existence")
     collections = ["Entity", "Insight", "Strategy", "Event", "Process"]
@@ -622,10 +604,10 @@ def run_validation_tests(client):
         except Exception as e:
             print(f"  ❌ {name} missing: {e}")
             return False
-
+    
     # Test 2: Create test entity WITHOUT providing vector
     print("\nTest 2: Auto-Vectorization Test")
-
+    
     entity_collection = client.collections.get("Entity")
     test_uuid = entity_collection.data.insert(
         properties={
@@ -661,7 +643,7 @@ def run_validation_tests(client):
         query="company business organization",
         limit=1
     )
-
+    
     if vector_response.objects:
         print(f"  ✅ Near text search successful: {vector_response.objects[0].properties['name']}")
     else:
@@ -770,11 +752,11 @@ def connect_to_weaviate(local=True, host=None, http_port=8081, grpc_port=50051):
 
 def main():
     """Main execution function"""
-
+    
     print("=" * 60)
     print("🚀 NebulaOS Schema Creation with text2vec-transformers")
     print("=" * 60)
-
+    
     # Connect to Weaviate
     try:
         client = connect_to_weaviate(local=True)
@@ -791,37 +773,37 @@ def main():
     
     try:
         print("📦 Creating collections with auto-vectorization...\n")
-
+        
         # Create collections in correct dependency order
         # 1. Entity first (no dependencies)
         create_entity_collection(client)
-
+        
         # 2. Strategy - references Entity and itself (self-reference is OK)
         create_strategy_collection(client)
-
+        
         # 3. Insight - references Entity, Strategy, and itself
         create_insight_collection(client)
-
+        
         # 4. Event - references Entity, Strategy, and Insight
         create_event_collection(client)
-
+        
         # 5. Process - references Entity and Strategy
         create_process_collection(client)
-
+        
         print("\n" + "=" * 60)
-
+        
         # Validate schema
         if not validate_schema(client):
             print("\n⚠️  Schema validation found issues")
             return 1
-
+        
         print("\n" + "=" * 60)
-
+        
         # Run tests
         if not run_validation_tests(client):
             print("\n⚠️  Validation tests found issues")
             return 1
-
+        
         print("\n" + "=" * 60)
         print("✅ Schema creation complete!")
         print("\n📝 Key Features:")
@@ -833,7 +815,6 @@ def main():
         print("  1. Insert data without worrying about vectors")
         print("  2. Use near_text() for semantic queries")
         print("  3. Vectors are generated automatically on insert")
-        print("  4. See example_auto_vectorization.py for usage examples")
         print("=" * 60)
         
     except Exception as e:

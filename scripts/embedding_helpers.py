@@ -1,7 +1,24 @@
 """
 NebulaOS Embedding Generation Helpers
 Handles vector generation using Google Embedding 004
+
+⚠️ DEPRECATED: This module is no longer needed with the current setup.
+NebulaOS now uses Weaviate's built-in text2vec-transformers for automatic
+embedding generation. Vectors are generated automatically when inserting data.
+
+This file is kept for reference and backward compatibility only.
+
+For the new auto-vectorization approach, see:
+- weaviate/example_auto_vectorization.py
+- weaviate/README_VECTORIZER.md
 """
+
+import warnings
+warnings.warn(
+    "embedding_helpers.py is deprecated. Use Weaviate's built-in text2vec-transformers instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 from typing import Dict, List, Optional
 import os

@@ -1,0 +1,17 @@
+version: '3.4'
+
+services:
+  # Text2Vec Transformers inference service
+  # This provides local embedding generation for Weaviate
+  t2v-transformers:
+    image: cr.weaviate.io/semitechnologies/transformers-inference:sentence-transformers-all-MiniLM-L6-v2
+    container_name: weaviate-t2v-transformers
+    environment:
+      ENABLE_CUDA: '0'  # Set to '1' if you have GPU support
+    networks:
+      - weaviate-net
+
+networks:
+  weaviate-net:
+    external: true
+    name: franklinchris_weaviate-net  # Connect to existing Weaviate network

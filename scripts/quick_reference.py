@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 """
 Quick Reference: Common Operations for NebulaOS Weaviate Collections
+
+⚠️ NOTE: This file contains examples using manual vectorization.
+With the current text2vec-transformers setup, vectors are auto-generated.
+For updated examples using auto-vectorization, see:
+- weaviate/example_auto_vectorization.py
+
+This file is kept for reference purposes.
 """
 
 import weaviate

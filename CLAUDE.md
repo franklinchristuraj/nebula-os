@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-NebulaOS is a semantic memory system and knowledge graph for AI agents. It provides persistent, context-aware knowledge using Weaviate (vector database) with Google text-embedding-004 embeddings (768 dimensions). Self-hosted, privacy-first architecture.
+NebulaOS is a semantic memory system and knowledge graph for AI agents. It provides persistent, context-aware knowledge using Weaviate (vector database) with built-in text2vec-transformers for automatic embedding generation (384 dimensions, sentence-transformers/all-MiniLM-L6-v2). Self-hosted, privacy-first architecture with local embedding inference.
 
-**Current status**: Phase 1 (Foundation/Schema) complete. Phase 2 (Data Ingestion via Make.com pipelines) in progress.
+**Current status**: Phase 1 (Foundation/Schema) complete with auto-vectorization. Phase 2 (Data Ingestion via Make.com pipelines) in progress.
 
 ## Commands
 
@@ -15,24 +15,21 @@ NebulaOS is a semantic memory system and knowledge graph for AI agents. It provi
 pip install -r requirements.txt
 
 # Environment setup
-cp .env.example .env  # then fill in WEAVIATE_API_KEY, GOOGLE_API_KEY, etc.
+cp .env.example .env  # then fill in WEAVIATE_API_KEY
 
-# Start Weaviate (Docker)
-docker run -d --name weaviate-secure -p 8081:8080 -p 50051:50051 \
-  -e AUTHENTICATION_APIKEY_ENABLED=true \
-  -e AUTHENTICATION_APIKEY_ALLOWED_KEYS=$WEAVIATE_API_KEY \
-  -e AUTHENTICATION_APIKEY_USERS=admin \
-  -v weaviate_data:/var/lib/weaviate \
-  cr.weaviate.io/semitechnologies/weaviate:1.34.4
+# Start Weaviate with text2vec-transformers (Docker)
+# See weaviate/setup_vectorizer.sh for complete setup
+# Or use the docker-compose files:
+docker-compose -f weaviate/docker-compose-vectorizer.yml up -d
 
-# Create schema (run once after Weaviate is up)
+# Create schema with auto-vectorization (run once after Weaviate is up)
 python weaviate/create_schema.py
 
 # Run validation tests
 python weaviate/test_schema.py
 
-# Test embedding setup
-python scripts/embedding_helpers.py
+# Test auto-vectorization
+python weaviate/example_auto_vectorization.py
 ```
 
 No linter or formatter is configured.
@@ -42,10 +39,10 @@ No linter or formatter is configured.
 ### Data Flow
 
 ```
-Data Sources → Make.com Pipeline (embedding generation) → Weaviate DB (Docker) → AI Agents (semantic search)
+Data Sources → Make.com Pipeline → Weaviate DB (Docker + text2vec-transformers) → AI Agents (semantic search)
 ```
 
-Vectors are generated externally (not by Weaviate). This manual vectorization approach allows swapping embedding models without schema changes.
+Vectors are generated automatically by Weaviate's built-in text2vec-transformers module using the sentence-transformers/all-MiniLM-L6-v2 model. The transformers inference service runs locally in Docker, keeping all data on-premise. No external API calls required for embeddings.
 
 ### Five Collections (Knowledge Graph)
 
@@ -63,8 +60,9 @@ Entity is the grounding layer; all other collections reference it. Cross-referen
 
 - **Domain separation**: Every object tagged `personal`, `work`, or `both` for privacy-aware filtering
 - **Superseding pattern**: Objects use `status` (active/superseded/archived) + `superseded_by` UUID instead of versioning — keeps search clean while preserving audit trail
-- **Task-specific embeddings**: `retrieval_document` for storage, `retrieval_query` for search (Google Embedding 004 feature)
-- **Hybrid search**: Combines vector similarity (cosine/HNSW) with property filters in single queries
+- **Automatic vectorization**: Weaviate generates embeddings on insert using text2vec-transformers - no manual vector management needed
+- **Selective vectorization**: Properties marked with `skip_vectorization=True` (metadata, dates, types) are excluded from embedding generation
+- **Hybrid search**: Combines vector similarity (cosine/HNSW) with property filters in single queries using `near_text()`
 
 ### Weaviate Connection
 
@@ -72,10 +70,13 @@ Connects to local Docker instance: HTTP on port 8081, gRPC on port 50051, authen
 
 ## Code Layout
 
-- `weaviate/create_schema.py` — Schema creation for all 5 collections (run once)
+- `weaviate/create_schema.py` — Schema creation for all 5 collections with auto-vectorization (run once)
 - `weaviate/test_schema.py` — Comprehensive validation: CRUD, vector search, cross-references, filtering
-- `scripts/embedding_helpers.py` — Google Embedding 004 integration with per-collection text preparation
+- `weaviate/example_auto_vectorization.py` — Usage examples with automatic embedding generation
+- `weaviate/docker-compose-vectorizer.yml` — Transformers inference service configuration
+- `weaviate/setup_vectorizer.sh` — Automated setup script for vectorizer infrastructure
 - `scripts/quick_reference.py` — Common Weaviate operations (CRUD, search, stats)
 - `scripts/example_usage.py` — End-to-end usage examples (create, search, filter, multi-collection queries)
+- `scripts/embedding_helpers.py` — (Deprecated) Legacy manual embedding helpers for Google Embedding 004
 - `pipelines/` — Placeholder for Make.com pipeline configs (Phase 2)
 - `docs/` — Numbered documentation: vision → architecture → research → implementation → changelog
